@@ -60,8 +60,10 @@ function fetchLatestMetarFromGmail(station, callback) {
         console.log("📬 Checking message:", snippet);
 
         // Extract METAR line
-        const regex = new RegExp(`${station}\\s+\\d{6}Z\\s+[^=]+`);
-        const metarLine = snippet.match(regex);
+      //  const regex = new RegExp(`METAR\\s+${station}\\s+\\d{6}Z\\s+[^=]+`);
+      const regex = new RegExp(`METAR\\s+${station}\\s+\\d{6}Z\\s+[^=\\n]+`, 'i');
+      console.log("regex framed ",regex);
+      const metarLine = snippet.match(regex);
         if (metarLine) {
             if (station.toUpperCase() === 'HDAM' || station.toUpperCase() === 'JIB') {
                 return callback(null, {
@@ -123,7 +125,7 @@ function fetchLatestTafFromGmail(station, callback) {
   
           // Match TAF string: e.g., "TAF HDAM 040500Z ..."
          // const regex = new RegExp(`TAF\\s+${station}\\s+\\d{6}Z\\s+.+`);
-         const regex = new RegExp(`${station}\\s+\\d{6}Z\\s+\\d{4}/\\d{4}\\s+.+`, 'i');
+         const regex = new RegExp(`TAF\\s+${station}\\s+\\d{6}Z\\s+\\d{4}/\\d{4}\\s+.+`, 'i');
  
          const tafMatch = snippet.match(regex);
   
