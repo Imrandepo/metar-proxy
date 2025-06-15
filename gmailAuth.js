@@ -74,7 +74,7 @@ function fetchLatestMetarFromGmail(station, callback) {
         const snippet = msg.data.snippet;
         const regex = new RegExp(`METAR\\s+${station}\\s+\\d{6}Z\\s+[^=\\n]+`, 'i');
         const metarLine = snippet.match(regex);
-        if (metarLine) {
+      /*  if (metarLine) {
           const info = airportData[station.toUpperCase()];
           const stationName = info ? `${info.name}, ${info.ctry}` : "Fallback (Gmail)";
           return callback(null, {
@@ -83,7 +83,36 @@ function fetchLatestMetarFromGmail(station, callback) {
             receiptTime: new Date().toISOString(),
             name: stationName
           });
-        }
+        }*/
+
+          if (metarLine) {
+            if (station.toUpperCase() === 'HDAM' || station.toUpperCase() === 'JIB') {
+                return callback(null, {
+                  raw_text: metarLine[0].trim(),
+                  icaoId: 'HDAM',
+                  receiptTime: new Date().toISOString(),
+                  name: 'Djibouti/Ambouli Intl, DJ'
+                });
+              }
+              if (station.toUpperCase() === 'OAKB' || station.toUpperCase() === 'KBL') {
+                return callback(null, {
+                  raw_text: metarLine[0].trim(),
+                  icaoId: 'OAKB',
+                  receiptTime: new Date().toISOString(),
+                  name: 'Kabul Intl, AF'
+                });
+              }
+            // ✅ Add station name from airports.json
+            const info = airportData[station.toUpperCase()];
+            const stationName = info ? `${info.name}, ${info.ctry}` : "Fallback (Gmail)";
+  
+            return callback(null, {
+              raw_text: metarLine[0].trim(),
+              icaoId: station.toUpperCase(),
+              receiptTime: new Date().toISOString(),
+              name: stationName
+            });
+          }
       }
 
       callback(null, null);
@@ -116,7 +145,7 @@ function fetchLatestTafFromGmail(station, callback) {
         const regex = new RegExp(`TAF\\s+${station}\\s+\\d{6}Z\\s+\\d{4}/\\d{4}\\s+.+`, 'i');
         const tafMatch = snippet.match(regex);
 
-        if (tafMatch) {
+    /*    if (tafMatch) {
           const info = airportData[station.toUpperCase()];
           const stationName = info ? `${info.name}, ${info.ctry}` : "Fallback (Gmail)";
           return callback(null, {
@@ -125,7 +154,38 @@ function fetchLatestTafFromGmail(station, callback) {
             receiptTime: new Date().toISOString(),
             name: stationName
           });
-        }
+        }*/
+          if (tafMatch) {
+            if (station.toUpperCase() === 'HDAM' || station.toUpperCase() === 'JIB') {
+                return callback(null, {
+                  raw_text: tafMatch[0].trim(),
+                  icaoId: 'HDAM',
+                  receiptTime: new Date().toISOString(),
+                  name: 'Djibouti/Ambouli Intl, DJ'
+                });
+              }
+              if (station.toUpperCase() === 'OAKB' || station.toUpperCase() === 'KBL') {
+                return callback(null, {
+                  raw_text: tafMatch[0].trim(),
+                  icaoId: 'OAKB',
+                  receiptTime: new Date().toISOString(),
+                  name: 'Kabul Intl, AF'
+                });
+              }
+            const info = airportData[station.toUpperCase()];
+            const stationName = info ? `${info.name}, ${info.ctry}` : "Fallback (Gmail)";
+  
+           // return callback(null, tafMatch[0].trim());
+           return callback(null, {
+            raw_text: tafMatch[0].trim(),
+
+            icaoId: station,
+            receiptTime: new Date().toISOString(),
+            name: stationName
+          });
+          
+          }
+
       }
 
       callback(null, null);
