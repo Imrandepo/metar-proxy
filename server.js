@@ -404,6 +404,41 @@ app.get('/api/tafs', async (req, res) => {
   }
 });
 
+
+
+//adding mesonet link at the backend
+const MESONET_BASE = process.env.MESONET_BASE_URL;
+
+// e.g. MESONET_BASE=https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py
+app.get('/api/asos', async (req, res) => {
+  try {
+    const { station, start, end } = req.query;
+    // parse ISO dates back into year/month/day
+    const s = new Date(start);
+    const e = new Date(end);
+
+    // build the real Mesonet URL
+    const url = `${MESONET_BASE}`
+      + `?station=${station}&data=metar`
+      + `&year1=${s.getUTCFullYear()}`
+      + `&month1=${String(s.getUTCMonth()+1).padStart(2,'0')}`
+      + `&day1=${String(s.getUTCDate()).padStart(2,'0')}`
+      + `&year2=${e.getUTCFullYear()}`
+      + `&month2=${String(e.getUTCMonth()+1).padStart(2,'0')}`
+      + `&day2=${String(e.getUTCDate()).padStart(2,'0')}`
+      + `&tz=UTC&format=onlycomma&latlon=yes&missing=null&trace=null`;
+
+    const upstream = await fetch(url);
+    if (!upstream.ok) return res.status(upstream.status).send(upstream.statusText);
+    const text = await upstream.text();
+    res.type('text/plain').send(text);
+
+  } catch (err) {
+    console.error('ASOS proxy error:', err);
+    res.status(500).send('Server error');
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`METAR proxy listening on http://localhost:${PORT}`);
