@@ -255,6 +255,85 @@ app.get('/api/asos', async (req, res) => {
 });
 
 
+// Only team leads can open the Workload page
+//const WORKLOAD_ALLOWED = new Set(['Aleksandr','Rahul.Yadav','Anton.Rajesh','Mohd.Ahsan','Rahul.Khurshid','admin']);
+
+function authFor(audExpected) {
+  return (req, res, next) => {
+    const hdr = req.headers.authorization || '';
+    const [type, token] = hdr.split(' ');
+    if (type !== 'Bearer' || !token) {
+      return res.status(401).json({ ok:false, error:'missing_token' });
+    }
+    try {
+      const payload = jwt.verify(token, process.env.JWT_SECRET); // { username, aud }
+      if (payload.aud !== audExpected) {
+        return res.status(403).json({ ok:false, error:'wrong_audience' });
+      }
+      req.user = payload;
+      next();
+    } catch {
+      return res.status(401).json({ ok:false, error:'invalid_token' });
+    }
+  };
+}
+
+// Exact usernames allowed to access the Workload page
+const WORKLOAD_ALLOWED = new Set([
+  'Aleksandr.Beliakov',
+  'Rahul.Yadav',
+  'Anton.Rajiahh',
+  'Muhammad.Ahsan',
+  'Rahil.Khurshid',
+  'admin',
+  'teamlead'
+]);
+
+// 3) login endpoints
+// index gate
+app.get('/api/index/allow', authFor('index'), (req, res) => {
+  res.json({ ok: true, user: req.user.username });
+});
+
+// workload gate
+app.get('/api/products/workload/allow', authFor('workload'), (req, res) => {
+  res.json({ ok: true, user: req.user.username });
+});
+
+
+app.post('/api/login-index', async (req, res) => {
+  const { username, password } = req.body;
+  if (username !== 'flightdispatch') {
+    return res.status(401).json({ message: 'Invalid credentials' });
+  }
+  const user = await User.findOne({ username });
+  if (!user) return res.status(401).json({ message: 'Invalid credentials' });
+
+  const valid = await bcrypt.compare(password, user.password);
+  if (!valid) return res.status(401).json({ message: 'Invalid credentials' });
+
+  const token = jwt.sign({ username, aud: 'index' }, process.env.JWT_SECRET, { expiresIn: '1h' });
+  res.json({ token });
+});
+
+
+app.post('/api/login-workload', async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!WORKLOAD_ALLOWED.has(username)) {
+    return res.status(401).json({ message: 'Invalid credentials' });
+  }
+
+  const user = await User.findOne({ username });
+  if (!user) return res.status(401).json({ message: 'Invalid credentials' });
+
+  const valid = await bcrypt.compare(password, user.password);
+  if (!valid) return res.status(401).json({ message: 'Invalid credentials' });
+
+  const token = jwt.sign({ username, aud: 'workload' }, process.env.JWT_SECRET, { expiresIn: '1h' });
+  res.json({ token });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`METAR proxy listening on http://localhost:${PORT}`);
@@ -306,3 +385,5 @@ app.post('/api/change-password', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+
