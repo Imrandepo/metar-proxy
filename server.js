@@ -282,7 +282,7 @@ function authFor(audExpected) {
 const WORKLOAD_ALLOWED = new Set([
   'Aleksandr.Beliakov',
   'Rahul.Yadav',
-  'Anton.Rajiahh',
+  'Anton.Rajiah',
   'Muhammad.Ahsan',
   'Rahil.Khurshid',
   'admin',
